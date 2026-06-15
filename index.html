@@ -6,25 +6,31 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  background-color: #f4f6fb;
+  background: linear-gradient(to right, #1f2430, #2c3445);
+  color: white;
   display: flex;
   flex-direction: column;
   align-items: center;
   margin: 0;
-  padding-top: 60px;
+  padding-top: 50px;
 }
 
-/* Title */
 h2 {
-  margin-bottom: 30px;
+  margin-bottom: 10px;
+}
+
+#progress {
+  margin-bottom: 15px;
+  font-size: 14px;
+  opacity: 0.8;
 }
 
 /* Card */
 .card {
-  width: 350px;
-  height: 220px;
+  width: 320px;
+  height: 200px;
   perspective: 1000px;
-  margin-bottom: 30px; /* FIXES OVERLAP */
+  margin-bottom: 20px;
 }
 
 .card-inner {
@@ -51,19 +57,17 @@ h2 {
   font-size: 20px;
   text-align: center;
   backface-visibility: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
 }
 
-/* Front */
 .front {
-  background-color: white;
+  background: #111;
   border: 2px solid #4a6cff;
   font-weight: bold;
 }
 
-/* Back */
 .back {
-  background-color: #4a6cff;
+  background: #4a6cff;
   color: white;
   transform: rotateY(180deg);
 }
@@ -72,20 +76,38 @@ h2 {
 .controls {
   display: flex;
   gap: 10px;
+  margin-bottom: 15px;
 }
 
 button {
-  background-color: #4a6cff;
-  color: white;
   border: none;
-  padding: 10px 18px;
+  padding: 10px 16px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  color: white;
 }
 
-button:hover {
+.nav {
+  background-color: #4a6cff;
+}
+
+.nav:hover {
   background-color: #354edb;
+}
+
+.know {
+  background: #2ecc71;
+}
+
+.review {
+  background: #e67e22;
+}
+
+/* Results screen */
+#results {
+  display: none;
+  text-align: center;
+  margin-top: 20px;
 }
 </style>
 
@@ -94,8 +116,9 @@ button:hover {
 <body>
 
 <h2>BB Lingo Flashcards</h2>
+<div id="progress"></div>
 
-<div class="card" onclick="flipCard()">
+<div class="card" onclick="flipCard()" id="cardContainer">
   <div class="card-inner" id="cardInner">
     <div class="card-face front" id="front"></div>
     <div class="card-face back" id="back"></div>
@@ -103,8 +126,19 @@ button:hover {
 </div>
 
 <div class="controls">
-  <button onclick="prevCard()">Previous</button>
-  <button onclick="nextCard()">Next</button>
+  <button class="nav" onclick="prevCard()">Previous</button>
+  <button class="nav" onclick="nextCard()">Next</button>
+</div>
+
+<div class="controls">
+  <button class="know" onclick="markKnown()">✅ I Know This</button>
+  <button class="review" onclick="markReview()">🔁 Review</button>
+</div>
+
+<div id="results">
+  <h3>Training Complete 🎉</h3>
+  <p id="score"></p>
+  <button class="nav" onclick="restart()">Restart</button>
 </div>
 
 <script>
@@ -123,10 +157,14 @@ const flashcards = [
 ];
 
 let current = 0;
+let known = 0;
+let completed = 0;
 
 function showCard() {
   document.getElementById("front").textContent = flashcards[current].front;
   document.getElementById("back").textContent = flashcards[current].back;
+  document.getElementById("progress").textContent =
+    `Card ${current + 1} of ${flashcards.length}`;
 }
 
 function flipCard() {
@@ -134,14 +172,59 @@ function flipCard() {
 }
 
 function nextCard() {
-  current = (current + 1) % flashcards.length;
-  document.getElementById("cardInner").classList.remove("flipped");
+  if (completed >= flashcards.length) return;
+
+  current++;
+  completed++;
+
+  if (current >= flashcards.length) {
+    showResults();
+    return;
+  }
+
+  resetCard();
   showCard();
 }
 
 function prevCard() {
-  current = (current - 1 + flashcards.length) % flashcards.length;
+  current = Math.max(0, current - 1);
+  resetCard();
+  showCard();
+}
+
+function resetCard() {
   document.getElementById("cardInner").classList.remove("flipped");
+}
+
+function markKnown() {
+  known++;
+  nextCard();
+}
+
+function markReview() {
+  nextCard();
+}
+
+function showResults() {
+  document.getElementById("cardContainer").style.display = "none";
+  document.getElementById("progress").style.display = "none";
+  document.querySelectorAll(".controls").forEach(el => el.style.display = "none");
+
+  document.getElementById("results").style.display = "block";
+  document.getElementById("score").textContent =
+    `You knew ${known} out of ${flashcards.length}`;
+}
+
+function restart() {
+  current = 0;
+  known = 0;
+  completed = 0;
+
+  document.getElementById("cardContainer").style.display = "block";
+  document.getElementById("progress").style.display = "block";
+  document.querySelectorAll(".controls").forEach(el => el.style.display = "flex");
+  document.getElementById("results").style.display = "none";
+
   showCard();
 }
 
@@ -150,4 +233,3 @@ showCard();
 
 </body>
 </html>
-``
