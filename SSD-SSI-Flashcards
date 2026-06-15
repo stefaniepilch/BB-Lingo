@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SSD vs SSI Flashcards</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #1f2430, #2c3445);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding-top: 40px;
+}
+
+h2 {
+  margin-bottom: 10px;
+}
+
+#progress {
+  margin-bottom: 15px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* Card */
+.card {
+  width: 340px;
+  height: 220px;
+  perspective: 1000px;
+  margin-bottom: 40px;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-size: 18px;
+  text-align: center;
+  backface-visibility: hidden;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+.front {
+  background: #111;
+  border: 2px solid #4a6cff;
+  font-weight: bold;
+}
+
+.back {
+  background: #4a6cff;
+  transform: rotateY(180deg);
+}
+
+/* Buttons */
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+button {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+}
+
+.nav { background-color: #4a6cff; }
+.know { background: #2ecc71; }
+.review { background: #e67e22; }
+.mode { background: #9b59b6; }
+
+/* Results */
+#results {
+  display: none;
+  text-align: center;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>SSD vs SSI Training</h2>
+<div id="progress"></div>
+
+<button class="mode" onclick="toggleTestMode()" id="modeBtn">
+🧠 Test Mode: OFF
+</button>
+
+<div class="card" onclick="flipCard()" id="cardContainer">
+  <div class="card-inner" id="cardInner">
+    <div class="card-face front" id="front"></div>
+    <div class="card-face back" id="back"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="nav" onclick="prevCard()">Previous</button>
+  <button class="nav" onclick="nextCard()">Next</button>
+</div>
+
+<div class="controls">
+  <button class="know" onclick="markKnown()">✅ I Know This</button>
+  <button class="review" onclick="markReview()">🔁 Review</button>
+</div>
+
+<div id="results">
+  <h3>Training Complete 🎉</h3>
+  <p id="score"></p>
+  <button class="nav" onclick="restart()">Restart</button>
+</div>
+
+<script>
+const flashcards = [
+  {front: "Payment Amount", back: "SSD: Higher max (~$1500 avg)\nSSI: Max $994"},
+  {front: "Income & Assets", back: "SSD: NOT counted\nSSI: Counted"},
+  {front: "Eligibility", back: "SSD: Adults only\nSSI: Adults + children"},
+  {front: "Work Credits", back: "SSD: Required\nSSI: Not required"},
+  {front: "Interview / PERC", back: "SSD: No interview/PERC\nSSI: Requires interview + PERC"},
+  {front: "Healthcare", back: "SSD: Medicare\nSSI: Medicaid"}
+];
+
+let current = 0;
+let known = 0;
+let completed = 0;
+let testMode = false;
+let revealed = false;
+
+function showCard() {
+  document.getElementById("progress").textContent =
+    `Card ${current + 1} of ${flashcards.length}`;
+
+  document.getElementById("front").textContent = flashcards[current].front;
+  document.getElementById("back").textContent =
+    revealed || !testMode ? flashcards[current].back : "Click to reveal answer";
+}
+
+function flipCard() {
+  if (testMode) {
+    revealed = true;
+    showCard();
+  } else {
+    document.getElementById("cardInner").classList.toggle("flipped");
+  }
+}
+
+function nextCard() {
+  current++;
+  completed++;
+
+  if (current >= flashcards.length) {
+    showResults();
+    return;
+  }
+
+  resetCard();
+  showCard();
+}
+
+function prevCard() {
+  current = Math.max(0, current - 1);
+  resetCard();
+  showCard();
+}
+
+function resetCard() {
+  revealed = false;
+  document.getElementById("cardInner").classList.remove("flipped");
+}
+
+function markKnown() {
+  known++;
+  nextCard();
+}
+
+function markReview() {
+  nextCard();
+}
+
+function toggleTestMode() {
+  testMode = !testMode;
+  document.getElementById("modeBtn").textContent =
+    testMode ? "🧠 Test Mode: ON" : "🧠 Test Mode: OFF";
+
+  resetCard();
+  showCard();
+}
+
+function showResults() {
+  document.getElementById("cardContainer").style.display = "none";
+  document.getElementById("progress").style.display = "none";
+  document.querySelectorAll(".controls").forEach(el => el.style.display = "none");
+  document.getElementById("modeBtn").style.display = "none";
+
+  document.getElementById("results").style.display = "block";
+  document.getElementById("score").textContent =
+    `You knew ${known} out of ${flashcards.length}`;
+}
+
+function restart() {
+  current = 0;
+  known = 0;
+  completed = 0;
+  revealed = false;
+
+  document.getElementById("cardContainer").style.display = "block";
+  document.getElementById("progress").style.display = "block";
+  document.querySelectorAll(".controls").forEach(el => el.style.display = "flex");
+  document.getElementById("modeBtn").style.display = "inline-block";
+  document.getElementById("results").style.display = "none";
+
+  showCard();
+}
+
+showCard();
+</script>
+
+</body>
+</html>
